@@ -16,6 +16,13 @@ fs.readFile('text-file.txt', () => {
 
   process.nextTick(() => console.log('process.nextTick already run'))
 
+  console.log("encrypting...")
+  crypto.pbkdf2Sync('password', 'heyjude', 100000, 1024, 'sha512')
+  console.log("encrypting...")
+  crypto.pbkdf2Sync('password', 'heyjude', 100000, 1024, 'sha512')
+  console.log("encrypting...")
+  crypto.pbkdf2Sync('password', 'heyjude', 100000, 1024, 'sha512')
+  // asynchronous
   crypto.pbkdf2('password', 'heyjude', 100000, 1024, 'sha512', () => {
     console.log(Date.now() - start, 'password encrypted')
   })
