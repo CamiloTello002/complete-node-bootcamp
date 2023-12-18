@@ -28,19 +28,15 @@ myEmitter.emit('newSale', 9)
 const server = http.createServer();
 
 server.on('request', (req, res) => {
-    console.log('request received')
-    res.write('request received');
-    res.end('yes')
+    console.log('request received');
+    console.log(req.url);
+    res.end('request received');
 })
 
 server.on('request', (req, res) => {
-    res.write('another request hah');
-})
-
-server.on('close', (req, res) => {
-    res.end('server closed haha');
+    console.log('another request haha');
 })
 
 server.listen(8000, '127.0.0.1', () => {
-    console.log('were waiting for requests haha')
+    console.log('were waiting for requests haha');
 })
