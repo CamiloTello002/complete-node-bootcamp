@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 labrador
-=======
-labrador
->>>>>>> d8e9599 (promisifying callbacks)
