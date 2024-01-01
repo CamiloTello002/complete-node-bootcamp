@@ -13,16 +13,27 @@ const readFilePro = file => {
 // function that runs in the background
 const getDogPic = async () => {
     try{
-    // reads contents of file
     const data = await readFilePro(`${__dirname}/dog.txt`);
     console.log(`Breed name: ${data}`)
-    // get request with contents of file
-    const res = await superagent.get(`https://dog.ceo/api/breed/${data}/images/random`);
-    console.log(res.body.message);
-    // takes the message of the response's body and saves it in a file
-    await writeFilePro('dog-img.txt', res.body.message);
+
+    /*const res = await superagent.get(
+      `https://dog.ceo/api/breed/${data}/images/random`
+    );*/
+    const res1pro = superagent.get(
+      `https://dog.ceo/api/breed/${data}/images/random`
+    );
+    const res2pro = superagent.get(
+      `https://dog.ceo/api/breed/${data}/images/random`
+    );
+    const res3pro = superagent.get(
+      `https://dog.ceo/api/breed/${data}/images/random`
+    );
+    const all = await Promise.all([res1pro, res2pro, res3pro]);
+    const imgs = all.map(el => el.body.message);
+    console.log(imgs);
+
+    await writeFilePro('dog-img.txt', imgs.join('\n'));
     console.log('random dog saved to file!!');
-    // in case something fails, it'll throw an error
     } catch (err) {
         console.log(err);
         throw(err);
