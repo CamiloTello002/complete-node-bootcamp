@@ -1,10 +1,25 @@
 // methods that will come in handy
 const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
 
 const app = express();
 
+// 1) MIDDLEWARES
+app.use(morgan('tiny'));
 app.use(express.json());
+
+// custom middleware function
+app.use((req, res, next /*next can be called whatever you want*/) => {
+  // it wasn't defined a route, so this will always be called
+  console.log('Hello from the middleware :)');
+  next();
+});
+
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf-8')
@@ -15,6 +30,8 @@ const tours = JSON.parse(
 // app.post('/api/v1/tours', createTour);
 // app.patch('/api/v1/tours/:id', updateTour);
 // app.delete('/api/v1/tours/:id', deleteTour);
+
+// 2) MIDDLEWARES
 
 const deleteTour = (req, res) => {
   // in case tour doesn't exist
@@ -51,8 +68,10 @@ const createTour = (req, res) => {
 };
 
 const getAllTours = (req, res) => {
+  console.log(req.requestTime);
   res.status(200).json({
     status: 'success',
+    requestedAt: req.requestTime,
     length: tours.length,
     data: {
       tours,
@@ -92,8 +111,10 @@ const updateTour = (req, res) => {
     .json({ status: 'success', data: { tour: '<updated tour here...>' } });
 };
 
+// 3) ROUTES
 // simpler way to define routes
 app.route('/api/v1/tours').get(getAllTours).post(createTour);
+
 app
   .route('/api/v1/tours/:id')
   .get(getTour)
@@ -102,7 +123,7 @@ app
 
 const port = 3000;
 
-// starts HTTP server
+// 4) STARTS SERVER
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
