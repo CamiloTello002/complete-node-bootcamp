@@ -6,7 +6,8 @@ const morgan = require('morgan');
 const app = express();
 
 // 1) MIDDLEWARES
-app.use(morgan('tiny'));
+app.use(morgan('dev'));
+
 app.use(express.json());
 
 // custom middleware function
@@ -25,11 +26,9 @@ const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf-8')
 );
 
-// app.get('/api/v1/tours', getAllTours);
-// app.get('/api/v1/tours/:id', getTour);
-// app.post('/api/v1/tours', createTour);
-// app.patch('/api/v1/tours/:id', updateTour);
-// app.delete('/api/v1/tours/:id', deleteTour);
+const users = JSON.parse(
+  fs.readFileSync(`${__dirname}/dev-data/data/users.json`, 'utf-8')
+);
 
 // 2) MIDDLEWARES
 
@@ -111,6 +110,29 @@ const updateTour = (req, res) => {
     .json({ status: 'success', data: { tour: '<updated tour here...>' } });
 };
 
+const getAllUsers = (req, res) => {
+  res.status(200).json(users);
+};
+const createUser = (req, res) => {
+  res.status(200).json({
+    message: 'user created :)',
+  });
+};
+const getUser = (req, res) => {
+  res.status(200).json({
+    message: 'user gotten :)',
+  });
+};
+const deleteUser = (req, res) => {
+  res.status(200).json({
+    message: 'user deleted :) :)',
+  });
+};
+const updateUser = (req, res) => {
+  res.status(200).json({
+    message: 'user updated :)',
+  });
+};
 // 3) ROUTES
 // simpler way to define routes
 app.route('/api/v1/tours').get(getAllTours).post(createTour);
@@ -120,6 +142,15 @@ app
   .get(getTour)
   .patch(updateTour)
   .delete(deleteTour);
+
+// handles http methods on a resource
+app.route('/api/v1/users').get(getAllUsers).post(createUser);
+
+app
+  .route('/api/v1/users/:id')
+  .get(getUser)
+  .delete(deleteUser)
+  .patch(updateUser);
 
 const port = 3000;
 
