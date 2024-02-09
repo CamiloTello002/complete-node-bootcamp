@@ -1,4 +1,4 @@
-const fs = require('fs');
+// const fs = require('fs');
 const Tour = require('../models/tourModel');
 const APIFeatures = require('../utils/apiFeatures');
 
@@ -49,7 +49,7 @@ exports.getAllTours = async (req, res) => {
       .sort()
       .limiting()
       .pagination();
-    let tours = await features.query;
+    const tours = await features.query;
     console.log(tours);
 
     // Pagination (Camilo's method)
