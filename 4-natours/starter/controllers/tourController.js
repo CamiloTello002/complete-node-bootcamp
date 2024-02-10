@@ -50,7 +50,6 @@ exports.getAllTours = async (req, res) => {
       .limiting()
       .pagination();
     const tours = await features.query;
-    console.log(tours);
 
     // Pagination (Camilo's method)
     // let page = 1;
