@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const app = require('./app');
 
-dotenv.config({ path: './config.env' });
+process.on('uncaughtException', (err, reason) => {
+  console.log(`Uncaught exception!\nThe reason is ${reason}`);
+  process.exit(1);
+});
+
+dotenv.config();
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -11,12 +16,21 @@ const DB = process.env.DATABASE.replace(
 
 mongoose.connect(DB).then((con) => {
   console.log('Successful :)');
+  console.log(process.env.NODE_ENV);
 });
 
 // const tourcreated = new TourModel({ name: 'the blinding light' });
 
 const port = process.env.PORT || 3000;
 // 3) STARTS SERVER now
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
+});
+
+// Unhandled rejections
+process.on('unhandledRejection', (err, reason, promise) => {
+  console.log(`Unhandled rejection at ${promise}\nThe reason is ${reason}`);
+  server.close((err) => {
+    process.exit(1);
+  });
 });
