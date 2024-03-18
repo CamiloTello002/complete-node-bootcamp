@@ -23,6 +23,7 @@ exports.deleteTour = catchAsync(async (req, res, next) => {
 });
 
 exports.createTour = catchAsync(async (req, res, next) => {
+  // 1) Take request body for creating the tour
   const newTour = await Tour.create(req.body);
   res.status(201).json({
     status: 'success',
@@ -44,9 +45,9 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: 'successful uwu',
     results: tours.length,
-    data: {
-      tours,
-    },
+    // data: {
+    //   tours,
+    // },
   });
 });
 

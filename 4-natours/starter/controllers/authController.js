@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const User = require('../models/userModel');
@@ -11,6 +12,29 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.cookie('jwt', token, {
+    expiresIn: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    secure: process.env.NODE_ENVIRONMENT === 'production',
+    httpOnly: true,
+  });
+
+  // Remove the password...
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+};
+
 exports.signup = catchAsync(async (req, res, next) => {
   // const newUser = await User.create(req.body);
   const newUser = await User.create({
@@ -22,17 +46,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  // After creating the new user, here we CREATE the token
-  // This part is EXTREMELY important, CRUCIAL
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -48,11 +62,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  const token = signToken(user.id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -140,4 +150,61 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on the token.
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!user)
+    return next(new AppError('Invalid token or token has expired :(', 404));
+  // 2) If token hasn't expired and there is a user, set the new password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetExpires = undefined;
+  user.passwordResetToken = undefined;
+
+  await user.save();
+  // 3) Update the changedPasswordAt property for the user
+  // 4) Log the user in and send JWT to the client.
+  createSendToken(user, 200, res);
+});
+
+// This is only for logged users
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  console.log(req.user);
+  // 1) Get token and check if it's there
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token)
+    return next(
+      new AppError(
+        'You are not logged in. Please log in to change password',
+        401,
+      ),
+    );
+
+  // 2) Verify the token (checks if token hasn't been tampered)
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  // get user from promise
+  const currentUser = await User.findById(decoded.id).select('+password');
+  if (!currentUser) return next(new AppError('User not found!', 401));
+  if (!currentUser.correctPassword(req.body.oldPassword, currentUser.password))
+    return next(new AppError('Incorrect old password! Please try again', 401));
+  currentUser.password = req.body.newPassword;
+  currentUser.passwordConfirm = req.body.newPasswordConfirm;
+  await currentUser.save();
+  createSendToken(currentUser, 201, res);
+  // 3) If old password matches, then it'll be changed
+  // 4) Log in and send JWT
+});

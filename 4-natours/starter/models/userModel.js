@@ -4,50 +4,59 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 // name, email, photo, password, passwordConfirm
-const usersSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please tell us your name'],
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email'],
-  },
-  photo: {
-    type: String,
-  },
-  role: {
-    type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
-    // default: 'user',
-    required: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minLength: 8,
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-    validate: {
-      // This only works when we create a NEW object and SAVE
-      validator: function (el) {
-        return el === this.password;
+const usersSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please tell us your name'],
+    },
+    email: {
+      type: String,
+      required: [true, 'Please provide your email'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email'],
+    },
+    photo: {
+      type: String,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      // default: 'user',
+      required: true,
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minLength: 8,
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Please confirm your password'],
+      validate: {
+        // This only works when we create a NEW object and SAVE
+        validator: function (el) {
+          return el === this.password;
+        },
+        message: 'Passwords are not the same',
       },
-      message: 'Passwords are not the same',
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
     },
   },
-  passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-});
+  // if the collection doesn't exist, then MongoDB creates a new one
+  { collection: 'users' },
+);
 
-// Run in case the password has been modified
+// This parses plain text password to hashed password
 usersSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
@@ -58,6 +67,24 @@ usersSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
 });
 
+// This adds the updated password timestamp
+usersSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // In case nothing above is true, then give the document that
+  // timestamp
+  this.passwordChangedAt = Date.now();
+  next();
+});
+
+// Checks for inactive users
+usersSchema.pre(/^find/, function (next) {
+  // This points to the current query
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+// Built-in method for checking password
 usersSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword,
@@ -66,6 +93,7 @@ usersSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+// Makes sure that the token hasn't expired
 usersSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
@@ -81,6 +109,7 @@ usersSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   return false;
 };
 
+// Temporary token for password resetting
 usersSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto

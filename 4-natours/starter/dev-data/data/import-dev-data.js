@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const Tour = require('../../models/tourModel');
 
-dotenv.config({ path: './../../config.env' });
+dotenv.config({ path: './../../.env' });
 
 // MongoDB database URI
 const DB = process.env.DATABASE.replace(
@@ -17,7 +17,7 @@ mongoose.connect(DB).then((con) => {
 });
 
 // Store JSON file into a variable
-const filePath = `${__dirname}/tours-simple.json`; // store path
+const filePath = `${__dirname}/tours.json`; // store path
 const file = fs.readFileSync(filePath, 'utf-8'); // get the file
 const fileJson = JSON.parse(file); // parse it to JSON
 

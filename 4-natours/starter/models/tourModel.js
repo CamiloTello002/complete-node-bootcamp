@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const validator = require('validator');
+// const User = require('./userModel');
 
-const opts = { toJSON: { virtuals: true }, toObject: { virtuals: true } };
+const opts = {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+  collection: 'tours',
+};
 
 const toursSchema = new mongoose.Schema(
   {
@@ -77,6 +82,38 @@ const toursSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          enum: ['Point'],
+          default: 'Point',
+          required: true,
+        },
+        coordinates: {
+          type: [Number],
+          required: true,
+        },
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   },
   opts,
 );
@@ -91,21 +128,20 @@ toursSchema.pre('save', async function (next) {
   next();
 });
 
-// toursSchema.pre('save', function (next) {
-//   console.log('Will save document...');
-//   next();
-// });
-
-// toursSchema.post('save', function (doc, next) {
-//   console.log(doc);
-//   next();
-// });
-
 // QUERY MIDDLEWARE
 toursSchema.pre(/^find/, function (next) {
   // toursSchema.pre('find', function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
+  next();
+});
+
+// For populating documents
+toursSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 
