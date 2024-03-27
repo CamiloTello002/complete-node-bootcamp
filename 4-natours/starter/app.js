@@ -1,4 +1,5 @@
 // methods that will come in handy
+const path = require('path');
 const hpp = require('hpp');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -9,11 +10,17 @@ const morgan = require('morgan'); // Timestamps
 const tourRouter = require('./routes/tourRoutes'); // /tour route
 const userRouter = require('./routes/userRoutes'); // /user route
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const AppError = require('./utils/appError'); // Error handler
 const globalErrorHandler = require('./controllers/errorController'); // Global error handler
 
 const app = express();
+// sets bug-less path for views
+app.set('views', path.join(__dirname, 'views'));
+// set pug as the template engine
+app.set('view engine', 'pug');
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   // This limit can also be a function, which means
@@ -35,6 +42,10 @@ const helmetOptions = {
 };
 
 // 1) GLOBAL MIDDLEWARES
+// when there's something requesting for static files
+// they will find it in this public foldes
+app.use(express.static(path.join(__dirname, 'public')));
+
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -53,7 +64,7 @@ app.use(express.json({ limit: '10kb' }));
 // Against XSS
 
 // Serving static files
-app.use(express.static(`${__dirname}/public`));
+// app.set('views', path.join(__dirname, 'views'));
 
 // protected against http parameter pollution
 app.use(hpp());
@@ -65,9 +76,7 @@ app.use((req, res, next) => {
 
 // 2) ROUTES
 // main route
-app.get('/', (req, res) => {
-  res.status(200).json({ alive: 'True' });
-});
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

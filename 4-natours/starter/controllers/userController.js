@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 // const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 const filterObj = (obj, changeableFields) => {
   const updatedObj = {};
@@ -18,38 +19,15 @@ const filterObj = (obj, changeableFields) => {
   return updatedObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find();
-
-  res.status(201).json({
-    status: 'successful uwu',
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-});
-
 exports.createUser = (req, res) => {
-  res.status(200).json({
-    message: 'user created :)',
+  res.status(500).json({
+    message: 'This route is not defined! Please use /signup instead!',
   });
 };
-exports.getUser = (req, res) => {
-  res.status(200).json({
-    message: 'user gotten :)',
-  });
-};
-exports.deleteUser = (req, res) => {
-  res.status(200).json({
-    message: 'user deleted :) :)',
-  });
-};
-exports.updateUser = (req, res) => {
-  res.status(200).json({
-    message: 'user updated :)',
-  });
-};
+exports.getUser = factory.readOne(User);
+exports.updateUser = factory.updateOne(User);
+exports.deleteUser = factory.deleteOne(User);
+exports.getAllUsers = factory.getAll(User);
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
@@ -89,3 +67,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};

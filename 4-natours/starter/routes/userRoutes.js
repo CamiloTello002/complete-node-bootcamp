@@ -4,18 +4,22 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+// ROUTES OPEN FOR EVERYONE
 router.route('/signup').post(authController.signup);
 router.route('/login').post(authController.login);
 router.route('/forgotPassword').post(authController.forgotPassword);
 router.route('/resetPassword/:token').patch(authController.resetPassword);
-// This only works for logged users
-router.patch(
-  '/updatePassword',
-  authController.protect,
-  authController.updatePassword,
-);
-router.patch('/updateMe', authController.protect, userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
+
+// PROTECT ROUTES. ALLOW THEM FOR REGISTERED USERS
+router.use(authController.protect);
+
+router.get('/me', userController.getMe, userController.getUser);
+router.patch('/updatePassword', authController.updatePassword);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+
+// ROUTES ONLY ALLOWED TO ADMINS
+router.use(authController.restrictTo('admin'));
 
 router
   .route('/')

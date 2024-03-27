@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const Tour = require('../../models/tourModel');
+const Review = require('../../models/reviewModel');
+const User = require('../../models/userModel');
 
 dotenv.config({ path: './../../.env' });
 
@@ -16,17 +18,20 @@ mongoose.connect(DB).then((con) => {
   console.log('Successful :)');
 });
 
-// Store JSON file into a variable
-const filePath = `${__dirname}/tours.json`; // store path
-const file = fs.readFileSync(filePath, 'utf-8'); // get the file
-const fileJson = JSON.parse(file); // parse it to JSON
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8')); // parse it to JSON
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8')); // parse it to JSON
+const reviews = JSON.parse(
+  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'),
+); // parse it to JSON
 
 // Upload JSON to the model
-const addTours = async () => {
+const importData = async () => {
   try {
-    await Tour.create(fileJson);
+    await Tour.create(tours);
+    await User.create(users, { validateBeforeSave: false });
+    await Review.create(reviews);
     console.log('Data has been successfully added :)');
-    console.log(`Tours added: ${fileJson.length}`);
+    // console.log(`Tours added: ${fileJson.length}`);
     process.exit();
   } catch (err) {
     console.log("Data couldn't be added :(");
@@ -35,9 +40,11 @@ const addTours = async () => {
 };
 
 // Delete all tours
-const deleteTours = async () => {
+const deleteData = async () => {
   try {
     await Tour.deleteMany({});
+    await User.deleteMany({});
+    await Review.deleteMany({});
     console.log('Data has been successfully deleted :)');
     process.exit();
   } catch (err) {
@@ -47,7 +54,7 @@ const deleteTours = async () => {
 };
 
 if (process.argv[2] === '--import') {
-  addTours();
+  importData();
 } else if (process.argv[2] === '--delete') {
-  deleteTours();
+  deleteData();
 }
