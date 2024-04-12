@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const express = require('express'); // application itself
 const morgan = require('morgan'); // Timestamps
+const cookieParser = require('cookie-parser');
 
 // ROUTES
 const tourRouter = require('./routes/tourRoutes'); // /tour route
@@ -42,6 +43,8 @@ const helmetOptions = {
 };
 
 // 1) GLOBAL MIDDLEWARES
+// for viewing cookies
+app.use(cookieParser());
 // when there's something requesting for static files
 // they will find it in this public foldes
 app.use(express.static(path.join(__dirname, 'public')));
@@ -56,7 +59,7 @@ app.use(helmet(helmetOptions));
 app.use('/api', limiter);
 
 // Body parser
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json());
 
 // Data sanitization (after body parser, it's when we've already read the data)
 // Against NoSQL query injection
@@ -69,8 +72,10 @@ app.use(express.json({ limit: '10kb' }));
 // protected against http parameter pollution
 app.use(hpp());
 
+// Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  console.log(req.cookies);
   next();
 });
 

@@ -15,6 +15,7 @@ const signToken = (id) =>
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
+  // This is the key... You're sending the JWT inside a cookie :)
   res.cookie('jwt', token, {
     expiresIn: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
@@ -68,12 +69,16 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
+  // in case there's no token in the authorization header
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     // This is the code that extracts the token
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    // If it wasn't in the header, then check the cookies...
+    token = req.cookies.jwt;
   }
   if (!token)
     return next(
@@ -96,6 +101,36 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
+  next();
+});
+
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  // check for jwt in cookie
+  if (req.cookies.jwt) {
+    // console.log("there's a cookie!");
+    // verify token
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET,
+    );
+
+    // check if user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) return next(new AppError('User not found!', 401));
+
+    // check if user has changed the password
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      return next(
+        new AppError('Password has been changed. Please log in again', 401),
+      );
+    }
+
+    res.locals.user = currentUser;
+    // use RETURN to finish execution on a line
+    // Otherwise, you'll end up calling next() TWICE.
+    return next();
+  }
+  // if there's no cookie, then just go on
   next();
 });
 

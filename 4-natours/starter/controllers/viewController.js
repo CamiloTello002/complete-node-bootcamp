@@ -24,3 +24,11 @@ exports.getTour = catchAsync(async (req, res) => {
     tour,
   });
 });
+
+exports.login = (req, res) => {
+  // Keep in mind that any data you retrieve MUST
+  // be done here :)
+  res.status(200).render('login', {
+    title: 'login',
+  });
+};
