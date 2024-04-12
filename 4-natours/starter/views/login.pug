@@ -1,3 +1,10 @@
+//-
+  this login file takes the base.pug file (which is served in the views folder) and injects the block content code
+  into the base.
+
+  So, in my case, it means I need to include the login.js file since it'll take the form and submit the data
+  edit 1: NO, it's already included in the base file
+
 extends base
 
 block content
@@ -14,4 +21,3 @@ block content
         .form__group
           button.btn--green(name='submit') Login
         
-  script(src='./js/submit.js')
