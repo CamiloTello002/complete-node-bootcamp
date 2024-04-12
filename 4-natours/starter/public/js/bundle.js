@@ -12410,7 +12410,29 @@ exports.isCancel = isCancel;
 exports.CanceledError = CanceledError;
 exports.AxiosError = AxiosError;
 exports.Axios = Axios;
-},{"./lib/axios.js":"../../node_modules/axios/lib/axios.js"}],"login.js":[function(require,module,exports) {
+},{"./lib/axios.js":"../../node_modules/axios/lib/axios.js"}],"alerts.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.showAlert = exports.hideAlert = void 0;
+
+/* eslint-disable */
+var hideAlert = exports.hideAlert = function hideAlert() {
+  var el = document.querySelector('.alert'); // in order to use removeChild, you need its parent element
+
+  if (el) el.parentElement.removeChild(el);
+}; // type is either 'success' or 'error'
+
+
+var showAlert = exports.showAlert = function showAlert(type, message) {
+  hideAlert();
+  var markup = "<div class=\"alert alert--".concat(type, "\">").concat(message, "</div>");
+  document.querySelector('body').insertAdjacentHTML('afterbegin', markup);
+  window.setTimeout(hideAlert, 5000);
+};
+},{}],"login.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -12419,6 +12441,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.login = void 0;
 
 var _axios = _interopRequireDefault(require("axios"));
+
+var _alerts = require("./alerts");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -12453,27 +12477,28 @@ function () {
 
         case 3:
           res = _context.sent;
+          (0, _alerts.showAlert)('success', 'successfully logged in :)');
           window.location.assign('/');
-          _context.next = 10;
+          _context.next = 11;
           break;
 
-        case 7:
-          _context.prev = 7;
+        case 8:
+          _context.prev = 8;
           _context.t0 = _context["catch"](0);
-          alert(_context.t0.response.data.message);
+          (0, _alerts.showAlert)('error', _context.t0.response.data.message);
 
-        case 10:
+        case 11:
         case "end":
           return _context.stop();
       }
-    }, _callee, null, [[0, 7]]);
+    }, _callee, null, [[0, 8]]);
   }));
 
   return function login(_x, _x2) {
     return _ref.apply(this, arguments);
   };
 }();
-},{"axios":"../../node_modules/axios/index.js"}],"index.js":[function(require,module,exports) {
+},{"axios":"../../node_modules/axios/index.js","./alerts":"alerts.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 require("core-js/modules/es6.array.copy-within");
