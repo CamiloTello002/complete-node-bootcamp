@@ -66,6 +66,16 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res, next) => {
+  res.cookie('jwt', 'loggedout', {
+    expiresIn: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({
+    status: 'success',
+  });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
@@ -104,35 +114,39 @@ exports.protect = catchAsync(async (req, res, next) => {
   next();
 });
 
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   // check for jwt in cookie
   if (req.cookies.jwt) {
-    // console.log("there's a cookie!");
-    // verify token
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET,
-    );
-
-    // check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) return next(new AppError('User not found!', 401));
-
-    // check if user has changed the password
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return next(
-        new AppError('Password has been changed. Please log in again', 401),
+    try {
+      // console.log("there's a cookie!");
+      // verify token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
       );
-    }
 
-    res.locals.user = currentUser;
-    // use RETURN to finish execution on a line
-    // Otherwise, you'll end up calling next() TWICE.
-    return next();
+      // check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) return next(new AppError('User not found!', 401));
+
+      // check if user has changed the password
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next(
+          new AppError('Password has been changed. Please log in again', 401),
+        );
+      }
+
+      res.locals.user = currentUser;
+      // use RETURN to finish execution on a line
+      // Otherwise, you'll end up calling next() TWICE.
+      return next();
+    } catch (err) {
+      return next();
+    }
   }
   // if there's no cookie, then just go on
   next();
-});
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
