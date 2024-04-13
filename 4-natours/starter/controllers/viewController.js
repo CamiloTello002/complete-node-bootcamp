@@ -45,5 +45,5 @@ exports.getAccount = (req, res) => {
 };
 
 exports.updateUserData = (req, res) => {
-  console.log('hey there');
+  console.log(req.body);
 };

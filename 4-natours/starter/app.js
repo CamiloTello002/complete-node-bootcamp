@@ -60,6 +60,7 @@ app.use('/api', limiter);
 
 // Body parser
 app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Data sanitization (after body parser, it's when we've already read the data)
 // Against NoSQL query injection
