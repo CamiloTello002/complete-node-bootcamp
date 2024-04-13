@@ -19,12 +19,20 @@ const handleTokenExpiredError = () =>
   new AppError('Expired token. Please log in again!', 401);
 
 // FUNCTIONS FOR ERRORS DEPENDING ON THE ENVIRONMENT :)
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
+const sendErrorDev = (err, req, res) => {
+  // API error
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+  // Website error
+  return res.status(err.statusCode).render('error', {
+    title: 'There was an error',
+    msg: err.message,
   });
 };
 const sendErrorProduction = (err, res) => {
@@ -55,7 +63,7 @@ module.exports = (err, req, res, next) => {
   // Error code will depend on the environment (development or production)
   switch (process.env.NODE_ENV) {
     case 'development':
-      sendErrorDev(err, res);
+      sendErrorDev(err, req, res);
       break;
     case 'production': {
       let error = JSON.parse(JSON.stringify(err));
