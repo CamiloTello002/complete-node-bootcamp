@@ -35,25 +35,32 @@ const sendErrorDev = (err, req, res) => {
     msg: err.message,
   });
 };
-const sendErrorProduction = (err, res) => {
-  // Operational, trusted error: send message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-
-    // Programming or other unknown error: don't leak error details to the client
-  } else {
-    // 1) Log the error to the console xd
+const sendErrorProduction = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    // Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
     console.error('Error!!!', err);
-
-    // 2) Send generic message
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
     });
   }
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
+  console.error('Error!!!', err);
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later',
+  });
 };
 
 module.exports = (err, req, res, next) => {
@@ -67,6 +74,7 @@ module.exports = (err, req, res, next) => {
       break;
     case 'production': {
       let error = JSON.parse(JSON.stringify(err));
+      error.message = err.message;
 
       if (error.name === 'CastError') error = handleCastErrorDB(error);
       if (error.code === 11000) error = handleDuplicateFieldsDB(error);
@@ -75,11 +83,11 @@ module.exports = (err, req, res, next) => {
       if (error.name === 'JsonWebTokenError') error = handleJsonWebTokenError();
       if (error.name === 'TokenExpiredError') error = handleTokenExpiredError();
 
-      sendErrorProduction(error, res);
+      sendErrorProduction(error, req, res);
       break;
     }
     default:
-      sendErrorProduction(err, res);
+      sendErrorProduction(err, req, res);
       break;
   }
 };
