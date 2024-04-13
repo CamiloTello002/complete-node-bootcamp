@@ -13,6 +13,10 @@ router.get('/', viewController.getOverview);
 router.get('/tour/:tourSlug', viewController.getTour);
 router.get('/login', viewController.login);
 
-router.post('/submit-user-data', viewController.updateUserData);
+router.post(
+  '/submit-user-data',
+  authController.protect,
+  viewController.updateUserData,
+);
 
 module.exports = router;
