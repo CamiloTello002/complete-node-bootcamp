@@ -1,21 +1,23 @@
 // const fs = require('fs');
 const multer = require('multer');
 const User = require('../models/userModel');
+const sharp = require('sharp');
 // const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/img/users');
-  },
-  filename: (req, file, cb) => {
-    // user-7889a-22323243.jpeg
-    const ext = file.mimetype.split('/')[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
-  },
-});
+const multerStorage = multer.memoryStorage();
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     // user-7889a-22323243.jpeg
+//     const ext = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
 
 const multerFilter = (req, file, cb) => {
   // this is for testing if the uploaded file
@@ -103,3 +105,25 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+  // 1) If there's not a file, go on
+  if (!req.file) return next();
+
+  // Our filename hadn't been set, so we're defining it here :)
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  sharp(req.file.buffer)
+    .resize({
+      fit: sharp.fit.contain,
+      width: 500,
+      height: 500,
+    })
+    .jpeg({
+      quality: 40,
+      force: true,
+    })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+};
