@@ -12925,23 +12925,25 @@ if (userPasswordForm) {
           case 0:
             // prevents the form from being submitted
             e.preventDefault();
+            document.querySelector('.btn--save-password').textContent = 'Updating...';
             passwordCurrent = document.getElementById('password-current').value;
             password = document.getElementById('password').value;
             passwordConfirm = document.getElementById('password-confirm').value;
-            _context.next = 6;
+            _context.next = 7;
             return (0, _updateSettings.updateSettings)({
               passwordCurrent: passwordCurrent,
               password: password,
               passwordConfirm: passwordConfirm
-            }, 'password').value;
+            }, 'password');
 
-          case 6:
+          case 7:
+            document.querySelector('.btn--save-password').textContent = 'Save password';
             document.getElementById('password-current').value = '';
             document.getElementById('password').value = '';
             document.getElementById('password-confirm').value = '';
             oc;
 
-          case 10:
+          case 12:
           case "end":
             return _context.stop();
         }
