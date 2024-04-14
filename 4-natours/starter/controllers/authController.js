@@ -234,6 +234,9 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+    console.log(token);
   }
   if (!token)
     return next(
@@ -248,11 +251,14 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   // get user from promise
   const currentUser = await User.findById(decoded.id).select('+password');
+  console.log(req.body);
   if (!currentUser) return next(new AppError('User not found!', 401));
-  if (!currentUser.correctPassword(req.body.oldPassword, currentUser.password))
+  if (
+    !currentUser.correctPassword(req.body.passwordCurrent, currentUser.password)
+  )
     return next(new AppError('Incorrect old password! Please try again', 401));
-  currentUser.password = req.body.newPassword;
-  currentUser.passwordConfirm = req.body.newPasswordConfirm;
+  currentUser.password = req.body.password;
+  currentUser.passwordConfirm = req.body.passwordConfirm;
   await currentUser.save();
   createSendToken(currentUser, 201, res);
   // 3) If old password matches, then it'll be changed
