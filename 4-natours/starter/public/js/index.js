@@ -1,5 +1,5 @@
 /* eslint-disable */
-import '@babel/polyfill';
+// import '@babel/polyfill';
 import { login, logout } from './login';
 import { updateSettings } from './updateSettings';
 
@@ -25,11 +25,13 @@ if (logoutButton) {
 
 if (userDataForm) {
   userDataForm.addEventListener('submit', (e) => {
-    // prevents the form from being submitted
     e.preventDefault();
-    const email = document.getElementById('email').value;
-    const name = document.getElementById('name').value;
-    updateSettings({ name, email }, 'data');
+    // done
+    const form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    updateSettings(form, 'data');
   });
 }
 
