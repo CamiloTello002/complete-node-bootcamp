@@ -152,8 +152,6 @@ exports.isLoggedIn = async (req, res, next) => {
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     // roles ['admin', 'lead-guide']
-    console.log('the role is...');
-    console.log(req.user.role);
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError("You don't have permission to perform this action!", 403),
@@ -226,7 +224,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
 // This is only for logged users
 exports.updatePassword = catchAsync(async (req, res, next) => {
-  console.log(req.user);
   // 1) Get token and check if it's there
   let token;
   if (
@@ -236,7 +233,6 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
-    console.log(token);
   }
   if (!token)
     return next(
@@ -251,7 +247,6 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   // get user from promise
   const currentUser = await User.findById(decoded.id).select('+password');
-  console.log(req.body);
   if (!currentUser) return next(new AppError('User not found!', 401));
   if (
     !currentUser.correctPassword(req.body.passwordCurrent, currentUser.password)
