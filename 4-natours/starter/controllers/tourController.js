@@ -26,7 +26,6 @@ exports.uploadTourImages = upload.fields([
 exports.resizeTourImages = catchAsync(async (req, res, next) => {
   // 1) There must be BOTH an image cover and images for the tour
   // console.log(req.files);
-  console.log(`the image cover is ${req.files.images}`);
   console.log(req.files.images);
   if (!req.files.imageCover || !req.files.images) return next();
 
@@ -44,7 +43,30 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
       force: true,
     })
     .toFile(`public/img/tours/${req.body.imageCover}`);
-  console.log(req.body);
+
+  // 3) process the images
+  req.body.images = [];
+  const imageUpload = req.files.images.map(async (file, index) => {
+    // 3.1) create the corresponding filename
+    const fileName = `tour-${req.params.id}-${Date.now()}-${index + 1}.jpeg`;
+    await sharp(file.buffer)
+      .resize({
+        fit: sharp.fit.contain,
+        width: 2000,
+        height: 1333,
+      })
+      .jpeg({
+        quality: 90,
+        force: true,
+      })
+      .toFile(`public/img/tours/${fileName}`);
+    req.body.images.push(fileName);
+  });
+
+  // await for all the promises
+  await Promise.all(imageUpload);
+
+  console.log(req.body.images);
   next();
 });
 
