@@ -341,9 +341,18 @@ body {
 }
 
 .section-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
   position: relative;
-  height: 38vw;
-  clip-path: polygon(
+  padding: 20px;
+  text-align: center;
+  /* position: relative;
+  overflow: hidden;
+  height: auto; */
+  /* height: 38vw; */
+  /* clip-path: polygon(
     0 0,
     100% 0,
     100% calc(100% - var(--section-rotate)),
@@ -354,8 +363,12 @@ body {
     100% 0,
     100% calc(100% - var(--section-rotate)),
     0 100%
-  );
+  ); */
 }
+
+/* .section-header > div {
+  height: auto;
+} */
 
 .header__hero {
   height: 100%;
@@ -438,6 +451,7 @@ body {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  flex-wrap: wrap;
 }
 .section-description > * {
   padding: 0 8vw;

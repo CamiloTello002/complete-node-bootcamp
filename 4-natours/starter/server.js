@@ -16,10 +16,15 @@ const DB = process.env.DATABASE.replace(
 );
 
 // Connect to database
-mongoose.connect(DB).then((con) => {
-  console.log('Connected to database!');
-  console.log(process.env.NODE_ENV);
-});
+mongoose
+  .connect(DB)
+  .then((con) => {
+    console.log('Connected to database!');
+    console.log(process.env.NODE_ENV);
+  })
+  .catch(() => {
+    console.log(`Failed to connect to database :(`);
+  });
 
 const port = process.env.PORT || 3000;
 // 3) STARTS SERVER now
