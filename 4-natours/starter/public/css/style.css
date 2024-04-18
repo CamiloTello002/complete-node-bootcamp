@@ -1077,6 +1077,28 @@ body {
   grid-gap: 7rem;
 }
 
+/* Media query for smaller screens (e.g., phones) */
+@media (max-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr; /* Display one column on smaller screens */
+    grid-gap: 3rem; /* Reduce the gap between items for better spacing */
+  }
+}
+
+/* Media query for medium-sized screens (e.g., tablets) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card-container {
+    grid-template-columns: repeat(2, 1fr); /* Display two columns */
+  }
+}
+
+/* Media query for larger screens (e.g., desktops) */
+@media (min-width: 1025px) {
+  .card-container {
+    grid-template-columns: repeat(3, 1fr); /* Display three columns */
+  }
+}
+
 .card {
   border-radius: 10px;
   overflow: hidden;
