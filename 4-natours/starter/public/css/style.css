@@ -300,8 +300,8 @@ body {
 
 .header {
   background-color: #444;
-  padding: 0 5rem;
-  height: 8rem;
+  padding: 1rem 5rem;
+  /* height: 8rem; */
   position: relative;
   z-index: 100;
   display: -webkit-box;
@@ -320,6 +320,12 @@ body {
     -webkit-box-direction: normal;
     -ms-flex-direction: column;
     flex-direction: column;
+  }
+}
+
+@media only screen and (max-width: 62.5em) {
+  .nav__el {
+    display: none;
   }
 }
 .header__logo img {
